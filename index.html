@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#431721">
+  <meta name="description" content="Carta de vinhos e gestão de stock da garrafeira do Silas Chef.">
+  <title>Garrafeira · Silas Chef</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="style.css?v=7">
+  <script defer src="config.js"></script>
+  <script defer src="assets/supabase-2.119.0.js"></script>
+  <script defer src="app.js?v=7"></script>
+</head>
+<body>
+  <div id="loading-screen" class="loading-screen" role="status" aria-live="polite">
+    <img class="loading-mark" src="assets/silas-chef.png" alt="Silas Chef">
+    <span class="loading-spinner" aria-hidden="true"></span>
+    <p>A carregar a garrafeira…</p>
+  </div>
+
+  <section id="auth-screen" class="auth-screen hidden" aria-label="Acesso à aplicação">
+    <div class="auth-brand"><img src="assets/silas-chef.png" alt="Silas Chef"><span>Garrafeira</span></div>
+    <div class="auth-card">
+      <h1>Entrar na garrafeira</h1>
+      <p>Usa a tua conta para consultar a carta e gerir o stock.</p>
+      <form id="auth-form" class="auth-form">
+        <label class="field">Utilizador <input id="auth-username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required></label>
+        <label class="field">Palavra-passe <input id="auth-password" name="password" type="password" autocomplete="current-password" required></label>
+        <label class="auth-remember"><input id="auth-remember" type="checkbox" checked> Manter sessão iniciada neste navegador</label>
+        <div id="auth-error" class="form-error hidden" role="alert"></div>
+        <button id="auth-submit" class="btn btn-dark btn-block" type="submit">Entrar</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="pending-screen" class="auth-screen hidden" aria-label="Acesso indisponível">
+    <div class="auth-brand"><img src="assets/silas-chef.png" alt="Silas Chef"><span>Garrafeira</span></div>
+    <div class="auth-card pending-card">
+      <h1>Acesso indisponível</h1>
+      <p>Pede ao administrador da garrafeira para verificar a tua conta.</p>
+      <button id="pending-reload" class="btn btn-dark btn-block" type="button">Verificar novamente</button>
+      <button id="pending-signout" class="text-button" type="button">Sair desta conta</button>
+    </div>
+  </section>
+
+  <div id="shell" class="shell hidden">
+    <aside class="sidebar">
+      <button class="brand" data-view="painel" type="button" aria-label="Silas Chef, painel da garrafeira">
+        <img src="assets/silas-chef.png" width="55" height="65" alt="">
+        <span>Garrafeira</span>
+      </button>
+      <nav id="primary-nav" class="primary-nav" aria-label="Secções da garrafeira">
+        <button data-view="painel" type="button" aria-current="page"><span data-icon="home"></span> Visão geral</button>
+        <button data-view="inventario" type="button"><span data-icon="layers"></span> Inventário</button>
+        <button data-view="carta" type="button"><span data-icon="book-open"></span> Carta de vinhos</button>
+        <button data-view="entradas" type="button"><span data-icon="arrow-in"></span> Entradas</button>
+        <button data-view="saidas" type="button"><span data-icon="log-out"></span> Saídas</button>
+        <button data-view="alertas" type="button"><span data-icon="bell"></span> Notificações <span id="sidebar-alert-count" class="nav-count" aria-hidden="true" hidden></span></button>
+        <button data-view="movimentos" type="button"><span data-icon="history"></span> Histórico</button>
+        <button class="admin-only hidden" data-view="equipa" type="button"><span data-icon="settings"></span> Definições</button>
+      </nav>
+    </aside>
+    <div class="workspace">
+      <header class="masthead">
+        <div class="masthead-inner">
+          <div class="heading-group">
+            <img class="compact-brand" src="assets/silas-chef.png" width="25" height="30" alt="Silas Chef">
+            <h1 id="section-title">Gestão da garrafeira</h1>
+          </div>
+          <label id="main-search" class="search-wrap" for="search-input">
+            <span data-icon="search"></span>
+            <input id="search-input" type="search" placeholder="Pesquisar vinho ou região…" aria-label="Pesquisar vinho ou região" autocomplete="off">
+            <kbd class="search-shortcut" aria-hidden="true">/</kbd>
+          </label>
+          <div class="masthead-tools">
+            <button id="alert-bell" class="header-icon" data-view="alertas" type="button" aria-label="Notificações"><span data-icon="bell"></span><span id="bell-refill-count" class="notification-count" aria-hidden="true" hidden></span></button>
+            <details id="options-menu" class="options-menu">
+              <summary title="Mais opções" aria-label="Mais opções"><span data-icon="user"></span></summary>
+              <div class="options-popover">
+                <div class="account-summary"><p id="account-name" class="options-note hidden"></p><span id="connection-label" class="connection-label" role="status"></span></div>
+                <button id="refresh-btn" type="button"><span data-icon="refresh-cw"></span> Atualizar dados</button>
+                <button id="new-wine" class="hidden" type="button" data-action="add"><span data-icon="plus"></span> Adicionar vinho</button>
+                <button type="button" data-action="export"><span data-icon="download"></span> Exportar stock</button>
+                <button id="export-history" class="hidden" type="button" data-action="export-history"><span data-icon="download"></span> Exportar histórico</button>
+                <button class="admin-only hidden" type="button" data-view="equipa"><span data-icon="users"></span> Equipa</button>
+                <button id="signout" class="hidden" type="button"><span data-icon="log-out"></span> Terminar sessão</button>
+                <p id="last-sync" class="options-note hidden"></p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </header>
+      <main id="main" class="main-content" tabindex="-1"></main>
+    </div>
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Navegação principal">
+      <button data-view="painel" type="button" aria-current="page"><span data-icon="home"></span> Painel</button>
+      <button data-view="inventario" type="button"><span data-icon="layers"></span> Stock</button>
+      <button data-view="carta" type="button"><span data-icon="book-open"></span> Carta</button>
+      <button data-view="movimentos" type="button"><span data-icon="history"></span> Histórico</button>
+    </nav>
+  </div>
+  <div id="modal-root" class="modal-root hidden" aria-hidden="true"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+</body>
+</html>
